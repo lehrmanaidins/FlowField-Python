@@ -5,7 +5,6 @@
 
 import math
 
-
 class Vector2:
     """ 2 Dimentional Vector
     """
