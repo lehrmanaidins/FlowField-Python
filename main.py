@@ -1,6 +1,8 @@
 """
     Main Module
     Author: Aidin Lehrman
+
+    https://tylerxhobbs.com/essays/2020/flow-fields
 """
 
 from Vector2 import Point2, Ray2, Vector2
