@@ -21,7 +21,7 @@ def render_rays(image_height: int, image_width: int, cells_tall: int, cells_wide
     image = np.ones((image_height, image_width, 3))
 
     # Works Reguardless of grid or no grid (can be used on random values too)
-    
+    # Add curve here
             
                 # This draws lines, need to make it draw curves
                 if 0 <= x < image_width and 0 <= y < image_height:
