@@ -3,58 +3,65 @@
     Author: Aidin Lehrman
 
     https://tylerxhobbs.com/essays/2020/flow-fields
-    https://eev.ee/blog/2016/05/29/perlin-noise/
+    https://github.com/pvigier/perlin-numpy
 """
 
 from math import cos, floor, sin
-import random
+import math
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt # pylint: disable=import-error
+from perlin_numpy import generate_perlin_noise_2d # pylint: disable=import-error
 from Vector2 import Ray2, Vector2 # pylint: disable=unused-import
-from perlin_numpy import generate_fractal_noise_2d
 
-def render(resolution: int, image_height: int, image_width: int, \
-    vector_length: float = 100, save_to_file: str='image.png') -> None:
-    """ Renders scene
+def render_rays(image_height: int, image_width: int, cells_tall: int, cells_wide: int, \
+                ray_list: list[list[Ray2]], curve_length: float = 10, save_to_file: str='image.png') -> None:
+    """ Renderes scene
     """
-
     # Initializes Image
-    image = np.zeros((image_height, image_width, 3))
+    image = np.ones((image_height, image_width, 3))
 
-    cells_tall: int = floor(image_height / resolution)
-    cells_wide: int = floor(image_width / resolution)
-
-    noise = generate_fractal_noise_2d((image_height, image_width), (8, 8))
+    # Works Reguardless of grid or no grid (can be used on random values too)
     
-    grid: list[list[Ray2]] = [[Ray2(Vector2(0, 0), Vector2(0, 0)) for _ in range(cells_wide)] \
-        for _ in range(cells_tall)]
-    for j in range(cells_tall):  # For each row
-        for i in range(cells_wide):  # For each column
-            rand_angle: float = noise[i][j] * 360
-            point: Vector2 = Vector2((resolution / 2) + (resolution * i), \
-                (resolution / 2) + (resolution * j))
-            rand_x: float = vector_length * sin(rand_angle)
-            rand_y: float = vector_length * cos(rand_angle)
+            
+                # This draws lines, need to make it draw curves
+                if 0 <= x < image_width and 0 <= y < image_height:
+                    image[floor(pixel.y)][floor(pixel.x)] = np.clip([0], 0, 1)
+
+    plt.imsave(save_to_file, image)  # Saves image
+
+def generate_rays(step_length: int, noise_scale: float, image_height: int, image_width: int) \
+    -> list[list[Ray2]]:
+    """ Generates Rays
+    """
+    cells_tall: int = floor(image_height / step_length)
+    cells_wide: int = floor(image_width / step_length)
+
+    # Generate noise with dimensions matching the grid
+    np.random.seed(0)
+    noise = generate_perlin_noise_2d((image_height, image_width), (8, 8))
+
+    grid: list[list[Ray2]] = [[Ray2(Vector2(0, 0), Vector2(0, 0)) for _ in range(cells_wide + 1)] \
+        for _ in range(cells_tall + 1)]
+
+    for j in range(cells_tall + 1):  # For each row
+        for i in range(cells_wide + 1):  # For each column
+            point: Vector2 = Vector2(step_length * i, step_length * j)
+            rand_angle: float = noise[floor(point.y * noise_scale)][floor(point.x * noise_scale)] \
+                * 2 * math.pi # Radians
+            rand_x: float = sin(rand_angle)
+            rand_y: float = cos(rand_angle)
             rand_ray: Ray2 = Ray2(point, Vector2(rand_x, rand_y))
             grid[j][i] = rand_ray
 
-    # Works Reguardless of grid or no grid (can be used on random values too)
-    for row in grid:
-        for cell in row:
-            step_length: int = 1
-            for length in range(0, floor(vector_length), step_length):
-                pixel: Vector2 = cell.point_at(length)
-                # Manually set the pixel to a color
-                x, y = int(pixel.x), int(pixel.y)
-                if 0 <= x < image_width and 0 <= y < image_height:
-                    image[floor(pixel.y)][floor(pixel.x)] = np.clip([1], 0, 1)
-
-    plt.imsave(save_to_file, image)  # Saves image
+    return grid
 
 def main() -> None:
     """ Main
     """
-    render(5, 1000, 1000, 10)
+    image_height: int = 1000
+    image_width: int = 1000
+    rays: list[list[Ray2]] = generate_rays(15, 0.1, image_height, image_width)
+    render_rays(image_height, image_width, rays, 200, 'image.png')
 
 if __name__ == '__main__':
     main()
