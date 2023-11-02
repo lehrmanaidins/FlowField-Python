@@ -3,6 +3,7 @@
     Author: Aidin Lehrman
 
     https://tylerxhobbs.com/essays/2020/flow-fields
+    https://eev.ee/blog/2016/05/29/perlin-noise/
 """
 
 from math import cos, floor, sin
