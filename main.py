@@ -7,10 +7,11 @@
 """
 
 from math import cos, floor, sin
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 from Vector2 import Ray2, Vector2 # pylint: disable=unused-import
-from perlin import PerlinNoiseFactory
+from perlin_numpy import generate_fractal_noise_2d
 
 def render(resolution: int, image_height: int, image_width: int, \
     vector_length: float = 100, save_to_file: str='image.png') -> None:
@@ -23,13 +24,13 @@ def render(resolution: int, image_height: int, image_width: int, \
     cells_tall: int = floor(image_height / resolution)
     cells_wide: int = floor(image_width / resolution)
 
-    noise = PerlinNoiseFactory(2, octaves=1)
+    noise = generate_fractal_noise_2d((image_height, image_width), (8, 8))
     
     grid: list[list[Ray2]] = [[Ray2(Vector2(0, 0), Vector2(0, 0)) for _ in range(cells_wide)] \
         for _ in range(cells_tall)]
     for j in range(cells_tall):  # For each row
         for i in range(cells_wide):  # For each column
-            rand_angle: float = int(noise(i, j) * 360)
+            rand_angle: float = noise[i][j] * 360
             point: Vector2 = Vector2((resolution / 2) + (resolution * i), \
                 (resolution / 2) + (resolution * j))
             rand_x: float = vector_length * sin(rand_angle)
@@ -53,7 +54,7 @@ def render(resolution: int, image_height: int, image_width: int, \
 def main() -> None:
     """ Main
     """
-    render(20, 1000, 1000, 20)
+    render(5, 1000, 1000, 10)
 
 if __name__ == '__main__':
     main()
