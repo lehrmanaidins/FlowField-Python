@@ -21,6 +21,7 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
     top_y: int = int(image_height * -0.5)
     bottom_y: int = int(image_height * 1.5)
 
+    # I think the code starts @ (0, 0) instead of (<0, <0), but it does go past (width, height).
     num_columns: int = math.floor((right_x - left_x) / resolution)
     num_rows: int = math.floor((bottom_y - top_y) / resolution)
 
@@ -30,7 +31,7 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
     # Initializes Noise
     np.random.seed(0)
     # the actual range is [-sqrt(n)/2, sqrt(n)/2], where n is the dimensionality
-    raw_noise = generate_perlin_noise_2d((256, 256), (8, 8))
+    raw_noise = generate_perlin_noise_2d((num_rows, num_columns), (8, 8))
     noise = (raw_noise - raw_noise.min()) / (raw_noise.max() - raw_noise.min()) # [0, 1]
 
     for j in range(num_columns):
@@ -42,8 +43,6 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
             for _ in range(curve_steps):
                 if 0 <= pixel_x < image_width and 0 <= pixel_y < image_height:
                     image[math.floor(pixel_x)][math.floor(pixel_y)] = np.clip([0], 0, 1)
-                else:
-                    continue
 
                 x_offset = pixel_x - left_x
                 y_offset = pixel_y - top_y
