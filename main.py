@@ -29,12 +29,10 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
 
     # Initializes Noise
     np.random.seed(0)
-    noise = generate_perlin_noise_2d((256, 256), (8, 8))
-    plt.figure()
-    plt.imshow(noise, cmap='gray', interpolation='lanczos')
-    plt.colorbar()
-    plt.show()
-"""
+    # the actual range is [-sqrt(n)/2, sqrt(n)/2], where n is the dimensionality
+    raw_noise = generate_perlin_noise_2d((256, 256), (8, 8))
+    noise = (raw_noise - raw_noise.min()) / (raw_noise.max() - raw_noise.min()) # [0, 1]
+
     for j in range(num_columns):
         print(f'Progress: {j + 1}/{num_columns} lines ({j / num_columns * 100:.02f}%)', end='\r')
 
@@ -43,7 +41,7 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
 
             for _ in range(curve_steps):
                 if 0 <= pixel_x < image_width and 0 <= pixel_y < image_height:
-                    image[pixel_x][pixel_y] = np.clip([0], 0, 1)
+                    image[math.floor(pixel_x)][math.floor(pixel_y)] = np.clip([0], 0, 1)
                 else:
                     continue
 
@@ -61,11 +59,11 @@ def render_rays(image_height: int, image_width: int, resolution: int, \
                 step_x = math.cos(grid_angle)
                 step_y = math.sin(grid_angle)
 
-                pixel_x = round(pixel_x + step_x)
-                pixel_y = round(pixel_y + step_y)
+                pixel_x = pixel_x + step_x # Here
+                pixel_y = pixel_y + step_y # Here
 
     plt.imsave(save_to_file, image)  # Saves image
-"""
+
 def main() -> None:
     """ Main
     """
