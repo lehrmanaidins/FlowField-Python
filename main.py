@@ -6,51 +6,72 @@
     https://github.com/pvigier/perlin-numpy
 """
 
-from math import cos, floor, sin
 import math
 import numpy as np
 import matplotlib.pyplot as plt # pylint: disable=import-error
 from perlin_numpy import generate_perlin_noise_2d
-from torch import pixel_shuffle # pylint: disable=import-error
-from Vector2 import Ray2, Vector2 # pylint: disable=unused-import
 
-def render_rays(image_height: int, image_width: int, grid_size: int, \
-                step_length: float, curve_steps: int = 10, \
+def render_rays(image_height: int, image_width: int, resolution: int, \
+                noise_scale: float, curve_steps: int = 10, \
                 save_to_file: str='image.png') -> None:
     """ Renderes scene
     """
+    left_x: int = int(image_width * -0.5)
+    right_x: int = int(image_width * 1.5)
+    top_y: int = int(image_height * -0.5)
+    bottom_y: int = int(image_height * 1.5)
+
+    num_columns: int = math.floor((right_x - left_x) / resolution)
+    num_rows: int = math.floor((bottom_y - top_y) / resolution)
+
     # Initializes Image
-    image = np.ones((image_height, image_width, 3))
+    image = np.ones((image_width, image_height, 3))
 
-    # Noise
+    # Initializes Noise
     np.random.seed(0)
-    noise_x = generate_perlin_noise_2d((image_height, image_width), (8, 8))
-    np.random.seed(1)
-    noise_y = generate_perlin_noise_2d((image_height, image_width), (8, 8))
+    noise = generate_perlin_noise_2d((256, 256), (8, 8))
+    plt.figure()
+    plt.imshow(noise, cmap='gray', interpolation='lanczos')
+    plt.colorbar()
+    plt.show()
+"""
+    for j in range(num_columns):
+        print(f'Progress: {j + 1}/{num_columns} lines ({j / num_columns * 100:.02f}%)', end='\r')
 
-    # Works Reguardless of grid or no grid (can be used on random values too)
-    for j in range(0, image_height, grid_size):
-        for i in range(0, image_width, grid_size):
-            pixel: Vector2 = Vector2(i, j)
-            for _ in range(1, curve_steps):
-                try:
-                    image[floor(pixel.y)][floor(pixel.x)] = np.clip([0], 0, 1)
+        for i in range(num_rows):
+            pixel_x, pixel_y = (i * resolution, j * resolution)
 
-                    direction: Vector2 = Vector2(noise_x[pixel.y][pixel.y], noise_y[pixel.y][pixel.x])
-                    step_ray: Ray2 = Ray2(pixel, direction)
-
-                    pixel = step_ray.point_at(step_length)
-                except:
+            for _ in range(curve_steps):
+                if 0 <= pixel_x < image_width and 0 <= pixel_y < image_height:
+                    image[pixel_x][pixel_y] = np.clip([0], 0, 1)
+                else:
                     continue
 
-    plt.imsave(save_to_file, image)  # Saves image
+                x_offset = pixel_x - left_x
+                y_offset = pixel_y - top_y
 
+                column_index = int(x_offset / resolution)
+                row_index = int(y_offset / resolution)
+
+                if 0 <= row_index < len(noise) and 0 <= column_index < len(noise):
+                    grid_angle: float = noise[column_index][row_index] * 2 * math.pi
+                else:
+                    continue
+
+                step_x = math.cos(grid_angle)
+                step_y = math.sin(grid_angle)
+
+                pixel_x = round(pixel_x + step_x)
+                pixel_y = round(pixel_y + step_y)
+
+    plt.imsave(save_to_file, image)  # Saves image
+"""
 def main() -> None:
     """ Main
     """
-    image_height: int = 96
-    image_width: int = 96
-    render_rays(image_height, image_width, 10, 1, 100, 'image.png')
+    image_height: int = 1000
+    image_width: int = 1000
+    render_rays(image_height, image_width, 10, 0.1, 100, 'image.png')
 
 if __name__ == '__main__':
     main()
